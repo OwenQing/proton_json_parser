@@ -1,0 +1,4 @@
+gcc test.c protonjson.c -o main
+echo "compile ok"
+echo "start running... "
+time ./main
