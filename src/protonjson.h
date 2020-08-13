@@ -29,6 +29,7 @@ enum {
     PROTON_PARSE_ROOT_NOT_SINGULAR,
     PROTON_PARSE_NUMBER_TOO_BIG,
     PROTON_PARSE_MISS_QUOTATION_MARK,
+    PROTON_PARSE_INVALID_STRING_ESCAPE,
 };
 
 int protonParse(ProtonValue* v, const char* json);

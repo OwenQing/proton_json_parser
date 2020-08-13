@@ -45,15 +45,14 @@ protonContextPush(ProtonContext* c, size_t size) {
 
 static void*
 protonContextPop(ProtonContext* c, size_t size) {
-    assert(c->top > size);
+    assert(c->top >= size);
     return c->stack + (c->top -= size);
 }
 
 /* 解析字符串 */
 static int
 parseString(ProtonContext* c, ProtonValue* v) {
-    size_t head = c->top;
-    size_t len;
+    size_t head = c->top, len;
     const char* p;
     EXPECT(c, '\"'); /* 检测字符串 */
     p = c->json;
@@ -62,10 +61,27 @@ parseString(ProtonContext* c, ProtonValue* v) {
         switch(ch) {
             case '\"':
                 // 解析完成栈清空
+                // 这里的 c->top 和初始的 c->top 已经不同了
                 len = c->top - head;
                 protonSetString(v, (const char*)protonContextPop(c, len), len);
                 c->json = p;
                 return PROTON_PARSE_OK;
+            // 转义 "\\t" --> "\t"
+            case '\\':
+                switch(*p++) {
+                    case '\"': PUTC(c, '\"'); break;
+                    case '\\': PUTC(c, '\\'); break;
+                    case '/': PUTC(c, '/'); break;
+                    case 'b': PUTC(c, '\b'); break;
+                    case 'f': PUTC(c, '\f'); break;
+                    case 'n': PUTC(c, '\n'); break;
+                    case 'r': PUTC(c, '\r'); break;
+                    case 't': PUTC(c, '\t'); break;
+                    default:
+                        c->top = head;
+                        return PROTON_PARSE_INVALID_STRING_ESCAPE;
+                } 
+                break;
             case '\0':
                 c->top = head;
                 return PROTON_PARSE_MISS_QUOTATION_MARK;
@@ -162,7 +178,6 @@ parseValue(ProtonContext* c, ProtonValue* v) {
         case 't':   return parseLiteral(c, v, "true", PROTON_TRUE);
         case 'f':   return parseLiteral(c, v, "false", PROTON_FALSE);
         case '\0':  return PROTON_PARSE_EXPECT_VALUE;
-        // FIXME
         case '\"':  return parseString(c, v);
         default:    return parseNumber2(c, v);
     }

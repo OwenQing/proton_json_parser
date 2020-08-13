@@ -143,6 +143,22 @@ test_parse_number() {
     TEST_NUMBER(-1.7976931348623157e+308, "-1.7976931348623157e+308");
 }
 
+#define TEST_STRING(expect, json)\
+    do{\
+        ProtonValue v;\
+        proton_init(&v);\
+        EXPECT_EQ_INT(PROTON_PARSE_OK, protonParse(&v, json));\
+        EXPECT_EQ_STRING(expect, protonGetString(&v), protonGetStringLength(&v));\
+        protonFree(&v);\
+    } while(0)
+
+static void
+test_parse_string() {
+    TEST_STRING("", "\"\"");
+    TEST_STRING("Hello", "\"Hello\"");
+    TEST_STRING("\" \\ / \b \f \n \r \t", "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
+}
+
 static void
 test_access_string() {
     ProtonValue v;
@@ -197,6 +213,7 @@ test_parse() {
     test_parse_true();
     test_parse_false();
     test_parse_number();
+    test_parse_string();
 }
 
 static void
