@@ -1,4 +1,9 @@
+#!/bin/sh
+
 gcc test.c protonjson.c -o main
 echo "compile ok"
 echo "start running... "
+
+# 内存泄漏检测
+# valgrind --leak-check=full time ./main
 time ./main

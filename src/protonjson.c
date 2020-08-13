@@ -86,6 +86,12 @@ parseString(ProtonContext* c, ProtonValue* v) {
                 c->top = head;
                 return PROTON_PARSE_MISS_QUOTATION_MARK;
             default:
+                // 非法字符处理
+                // char 带不带符号是编译器决定的
+                if ((unsigned char)ch < 0x20) { 
+                    c->top = head;
+                    return PROTON_PARSE_INVALID_STRING_CHAR;
+                }
                 PUTC(c, ch); /* push stack */
         }
     }
